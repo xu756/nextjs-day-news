@@ -1,29 +1,13 @@
 import 'server-only'
 
-import { allDigests } from 'content-collections'
-import fg from 'fast-glob'
-import yaml from 'js-yaml'
-import fs from 'node:fs'
+import { allDigestDays, allDigests } from 'content-collections'
 
-type RawDigestPost = (typeof allDigests)[number] & {
-  _meta?: {
-    fileName?: string
-    path?: string
-  }
-  slug?: string
-  candidateItems?: Array<{
-    title: string
-    url: string
-    sourceName?: string
-    sourceType?: string
-    score?: number
-  }>
-  sources?: Array<{
-    name: string
-    url: string
-    sourceType?: string
-  }>
-}
+type RawDigestPost = (typeof allDigests)[number]
+type DigestDayDataRecord = (typeof allDigestDays)[number]
+
+export type DigestSourceItem = NonNullable<
+  NonNullable<DigestDayDataRecord['all']>[number]
+>
 
 export type DigestPost = RawDigestPost & {
   slug: string
@@ -33,15 +17,6 @@ export type DigestDay = {
   day: string
   posts: DigestPost[]
   lead: DigestPost
-}
-
-export type DigestSourceItem = {
-  title: string
-  url: string
-  sourceNames: string[]
-  sourceTypes: string[]
-  score?: number
-  mentions: number
 }
 
 type DigestSourceRecord = {
@@ -57,26 +32,16 @@ export type DigestDayConfig = {
   coverAlt?: string
 }
 
-type DigestDayDataRecord = DigestDayConfig & {
-  candidateCount?: number
-  featured?: DigestSourceItem[]
-  all?: DigestSourceItem[]
+function dayFromIso(iso: string): string {
+  return iso.slice(0, 10)
 }
 
-function dayFromUnknown(value: unknown): string | null {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+function dayFromDateLike(value: string | Date): string {
+  if (value instanceof Date) {
     return value.toISOString().slice(0, 10)
   }
 
-  if (typeof value === 'string' && value.trim()) {
-    return value.trim().slice(0, 10)
-  }
-
-  return null
-}
-
-function dayFromIso(iso: string): string {
-  return iso.slice(0, 10)
+  return value.slice(0, 10)
 }
 
 function normalizeUrl(url: string): string {
@@ -102,116 +67,11 @@ function pushUnique(target: string[], value: string | undefined): void {
   if (!target.includes(value)) target.push(value)
 }
 
-function parseSourceItem(raw: unknown): DigestSourceItem | null {
-  if (!raw || typeof raw !== 'object') return null
-
-  const record = raw as Record<string, unknown>
-  const title =
-    typeof record.title === 'string' && record.title.trim()
-      ? record.title.trim()
-      : null
-  const url =
-    typeof record.url === 'string' && record.url.trim() ? record.url.trim() : null
-
-  if (!title || !url) return null
-
-  const sourceNames = Array.isArray(record.sourceNames)
-    ? record.sourceNames.filter((item): item is string => typeof item === 'string')
-    : []
-
-  const sourceTypes = Array.isArray(record.sourceTypes)
-    ? record.sourceTypes.filter((item): item is string => typeof item === 'string')
-    : []
-
-  const mentionsRaw = Number(record.mentions)
-  const mentions = Number.isFinite(mentionsRaw) ? Math.max(1, mentionsRaw) : 1
-
-  const scoreRaw = Number(record.score)
-  const score = Number.isFinite(scoreRaw) ? scoreRaw : undefined
-
-  return {
-    title,
-    url,
-    sourceNames,
-    sourceTypes,
-    mentions,
-    score,
-  }
-}
-
-function parseSourceItems(value: unknown): DigestSourceItem[] | undefined {
-  if (!Array.isArray(value)) return undefined
-  return value
-    .map((item) => parseSourceItem(item))
-    .filter((item): item is DigestSourceItem => Boolean(item))
-}
-
-function parseDayData(rawInput: string): DigestDayDataRecord | null {
-  if (!rawInput.trim()) return null
-
-  let parsed: unknown
-  try {
-    parsed = yaml.load(rawInput)
-  } catch {
-    return null
-  }
-
-  if (!parsed || typeof parsed !== 'object') return null
-
-  const record = parsed as Record<string, unknown>
-  const date = dayFromUnknown(record.date)
-  if (!date) return null
-
-  const coverImage =
-    typeof record.coverImage === 'string' && record.coverImage.trim()
-      ? record.coverImage.trim()
-      : undefined
-
-  const coverAlt =
-    typeof record.coverAlt === 'string' && record.coverAlt.trim()
-      ? record.coverAlt.trim()
-      : undefined
-
-  const candidateCountRaw = Number(record.candidateCount)
-  const candidateCount = Number.isFinite(candidateCountRaw)
-    ? Math.max(0, Math.floor(candidateCountRaw))
-    : undefined
-
-  return {
-    date,
-    coverImage,
-    coverAlt,
-    candidateCount,
-    featured: parseSourceItems(record.featured),
-    all: parseSourceItems(record.all),
-  }
-}
-
-function loadDigestDayData(): DigestDayDataRecord[] {
-  const root = process.cwd()
-  const files = fg.sync('content/digest/*/data.yaml', {
-    cwd: root,
-    absolute: true,
-  })
-
-  return files
-    .map((filePath) => {
-      try {
-        const raw = fs.readFileSync(filePath, 'utf8')
-        return parseDayData(raw)
-      } catch {
-        return null
-      }
-    })
-    .filter((item): item is DigestDayDataRecord => Boolean(item?.date))
-}
-
 function resolvePostSlug(post: RawDigestPost): string {
   if (typeof post.slug === 'string' && post.slug.trim()) {
     return post.slug.trim()
   }
 
-  // Default slug is the digest day, because one route represents one day.
   return dayFromIso(post.pubDate)
 }
 
@@ -222,11 +82,11 @@ function normalizePost(post: RawDigestPost): DigestPost {
   }
 }
 
-const digestPosts: DigestPost[] = allDigests.map((post) =>
-  normalizePost(post as RawDigestPost),
-)
+const digestPosts: DigestPost[] = allDigests.map((post) => normalizePost(post))
 
-const digestDayData = loadDigestDayData()
+const digestDayDataByDate = new Map(
+  allDigestDays.map((item) => [dayFromDateLike(item.date), item] as const),
+)
 
 function comparePostOrder(a: DigestPost, b: DigestPost): number {
   const fileA = a._meta?.fileName ?? ''
@@ -297,25 +157,25 @@ function asSourceRecord(
   dayData: DigestDayDataRecord,
 ): DigestSourceRecord | null {
   if (
-    typeof dayData.candidateCount === 'number' &&
-    Array.isArray(dayData.featured) &&
-    Array.isArray(dayData.all)
+    typeof dayData.candidateCount !== 'number' ||
+    !Array.isArray(dayData.featured) ||
+    !Array.isArray(dayData.all)
   ) {
-    return {
-      date: dayData.date,
-      candidateCount: dayData.candidateCount,
-      featured: dayData.featured,
-      all: dayData.all,
-    }
+    return null
   }
 
-  return null
+  return {
+    date: dayFromDateLike(dayData.date),
+    candidateCount: dayData.candidateCount,
+    featured: dayData.featured,
+    all: dayData.all,
+  }
 }
 
-export function getDigestDays(): DigestDay[] {
+function buildDigestDays(posts: DigestPost[]): DigestDay[] {
   const grouped = new Map<string, DigestPost[]>()
 
-  for (const post of digestPosts) {
+  for (const post of posts) {
     const day = dayFromIso(post.pubDate)
     const current = grouped.get(day) ?? []
     current.push(post)
@@ -324,8 +184,8 @@ export function getDigestDays(): DigestDay[] {
 
   return Array.from(grouped.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
-    .map(([day, posts]) => {
-      const sorted = [...posts].sort(comparePostOrder)
+    .map(([day, items]) => {
+      const sorted = [...items].sort(comparePostOrder)
       return {
         day,
         posts: sorted,
@@ -334,24 +194,45 @@ export function getDigestDays(): DigestDay[] {
     })
 }
 
+const digestDays = buildDigestDays(digestPosts)
+const digestDaySlugs = digestDays.map((day) => day.day)
+const digestDayLookup = new Map<string, DigestDay>()
+
+for (const day of digestDays) {
+  if (!digestDayLookup.has(day.day)) {
+    digestDayLookup.set(day.day, day)
+  }
+
+  for (const post of day.posts) {
+    if (!digestDayLookup.has(post.slug)) {
+      digestDayLookup.set(post.slug, day)
+    }
+  }
+}
+
+function safeDecodeURIComponent(slug: string): string {
+  try {
+    return decodeURIComponent(slug)
+  } catch {
+    return slug
+  }
+}
+
+export function getDigestDays(): DigestDay[] {
+  return digestDays
+}
+
 export function getDigestDaySlugs(): string[] {
-  return getDigestDays().map((day) => day.day)
+  return digestDaySlugs
 }
 
 export function findDigestDayBySlug(slug: string): DigestDay | null {
-  const decodedSlug = decodeURIComponent(slug)
-
-  return (
-    getDigestDays().find(
-      (day) =>
-        day.day === decodedSlug ||
-        day.posts.some((post) => post.slug === decodedSlug),
-    ) ?? null
-  )
+  const decodedSlug = safeDecodeURIComponent(slug)
+  return digestDayLookup.get(decodedSlug) ?? null
 }
 
 export function getSourcesForDay(day: string, posts: DigestPost[]) {
-  const dayData = digestDayData.find((item) => item.date === day)
+  const dayData = digestDayDataByDate.get(day)
   const sourceRecord = dayData ? asSourceRecord(dayData) : null
 
   if (sourceRecord) {
@@ -373,11 +254,11 @@ export function getSourcesForDay(day: string, posts: DigestPost[]) {
 }
 
 export function getDayConfig(day: string): DigestDayConfig | undefined {
-  const dayData = digestDayData.find((item) => item.date === day)
+  const dayData = digestDayDataByDate.get(day)
   if (!dayData) return undefined
 
   return {
-    date: dayData.date,
+    date: dayFromDateLike(dayData.date),
     coverImage: dayData.coverImage,
     coverAlt: dayData.coverAlt,
   }

@@ -1,5 +1,4 @@
 import DigestDayCard from '@/components/DigestDayCard'
-import { RevealOnScroll } from '@/components/RevealOnScroll'
 import {
   formatZhDateLabel,
   getDigestDays,
@@ -53,41 +52,29 @@ export default function DigestIndexPage() {
       ) : (
         <>
           {featured ? (
-            <RevealOnScroll
-              className="will-change-transform"
-              data-testid="featured-day-card"
-            >
-              <DigestDayCard
-                dayLabel={formatZhDateLabel(featured.day)}
-                slug={featured.day}
-                titles={featured.posts.slice(0, 3).map((post) => post.title)}
-                candidateCount={
-                  getSourcesForDay(featured.day, featured.posts).candidateCount
-                }
-                featured
-              />
-            </RevealOnScroll>
+            <DigestDayCard
+              dayLabel={formatZhDateLabel(featured.day)}
+              slug={featured.day}
+              titles={featured.posts.slice(0, 3).map((post) => post.title)}
+              candidateCount={
+                getSourcesForDay(featured.day, featured.posts).candidateCount
+              }
+              featured
+            />
           ) : null}
 
           <ul className="mt-5 space-y-4">
-            {archive.map((digestDay, index) => (
+            {archive.map((digestDay) => (
               <li key={digestDay.day}>
-                <RevealOnScroll
-                  className="will-change-transform"
-                  delayMs={Math.min(index * 70, 420)}
-                >
-                  <DigestDayCard
-                    dayLabel={formatZhDateLabel(digestDay.day)}
-                    slug={digestDay.day}
-                    titles={digestDay.posts
-                      .slice(0, 3)
-                      .map((post) => post.title)}
-                    candidateCount={
-                      getSourcesForDay(digestDay.day, digestDay.posts)
-                        .candidateCount
-                    }
-                  />
-                </RevealOnScroll>
+                <DigestDayCard
+                  dayLabel={formatZhDateLabel(digestDay.day)}
+                  slug={digestDay.day}
+                  titles={digestDay.posts.slice(0, 3).map((post) => post.title)}
+                  candidateCount={
+                    getSourcesForDay(digestDay.day, digestDay.posts)
+                      .candidateCount
+                  }
+                />
               </li>
             ))}
           </ul>

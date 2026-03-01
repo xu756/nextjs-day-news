@@ -3,7 +3,7 @@
  *
  * Read by app:
  * 1) Posts (via content-collections): content/digest/<YYYY-MM-DD>/*.{md,mdx}
- * 2) Day data (via import.meta.glob): content/digest/<YYYY-MM-DD>/data.yaml
+ * 2) Day data (via content-collections yaml parser): content/digest/<YYYY-MM-DD>/data.yaml
  *
  * If you create files matching this structure and fields, the app can read them.
  */
