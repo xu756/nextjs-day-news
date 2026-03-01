@@ -14,7 +14,9 @@ export default function Footer() {
         <h3 className="font-serif text-2xl font-bold text-slate-900">
           订阅AI资讯速览
         </h3>
-        <p className="mt-2 text-sm text-slate-600">英文一手信源，AI行业内参。</p>
+        <p className="mt-2 text-sm text-slate-600">
+          英文一手信源，AI行业内参。
+        </p>
 
         <form
           className="mx-auto mt-5 flex w-full max-w-lg flex-col gap-2 sm:flex-row"
@@ -44,7 +46,9 @@ export default function Footer() {
         </form>
 
         {submitted ? (
-          <p className="mt-3 text-sm text-emerald-700">已记录，后续可接入订阅服务。</p>
+          <p className="mt-3 text-sm text-emerald-700">
+            已记录，后续可接入订阅服务。
+          </p>
         ) : null}
       </section>
 
@@ -68,7 +72,9 @@ export default function Footer() {
         </Link>
       </nav>
 
-      <p className="mt-2 text-center text-xs text-slate-500">© {year} AI资讯速览</p>
+      <p className="mt-2 text-center text-xs text-slate-500">
+        © {year} AI资讯速览
+      </p>
     </footer>
   )
 }
