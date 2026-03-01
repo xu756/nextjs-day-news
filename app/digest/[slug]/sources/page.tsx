@@ -59,7 +59,7 @@ function SourceSection(props: {
       </h2>
 
       <div className="space-y-3">
-        {props.items.map((item, index) => (
+        {props.items.map((item) => (
           <article
             key={item.url}
             className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"

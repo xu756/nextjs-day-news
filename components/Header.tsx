@@ -1,6 +1,6 @@
 'use client'
 
-import { Languages, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -24,7 +24,12 @@ export default function Header() {
               className="inline-flex items-center gap-1.5 transition hover:text-slate-900"
             >
               <Search size={14} />
-              搜索
+              日报
+            </Link>
+          </li>
+          <li>
+            <Link href="/blog" className="transition hover:text-slate-900">
+              博客
             </Link>
           </li>
           <li>
@@ -57,7 +62,7 @@ export default function Header() {
               </div>
             ) : null}
           </li>
-          <li>
+          {/* <li>
             <Link
               href="/digest"
               className="inline-flex items-center gap-1.5 transition hover:text-slate-900"
@@ -65,7 +70,7 @@ export default function Header() {
               <Languages size={14} />
               English
             </Link>
-          </li>
+          </li> */}
         </ul>
       </nav>
     </header>

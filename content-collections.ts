@@ -16,6 +16,15 @@ function normalizeOptionalText(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
+function normalizePathTitle(value: string): string {
+  return value.trim().replaceAll('/', '-')
+}
+
+function readCategoryFromFilePath(filePath: string): string {
+  const [category] = filePath.split('/')
+  return category?.trim() || 'general'
+}
+
 const digestSourceItemSchema = z.object({
   title: z.string().trim().min(1),
   url: z.string(),
@@ -71,6 +80,57 @@ const digest = defineCollection({
   },
 })
 
+const blog = defineCollection({
+  name: 'blog',
+  directory: 'content/blog',
+  include: '**/*.mdx',
+  schema: z.object({
+    title: z.string().trim().min(1),
+    description: z.string().optional(),
+    pubDate: z.string().trim().min(10),
+    tags: z.array(z.string().trim().min(1)).min(1),
+    coverImage: z.string().optional(),
+    layout: z.string().trim().min(1).optional(),
+    draft: z.boolean().optional(),
+    content: z.string(),
+  }),
+  transform: async (document, context) => {
+    const mdx = await compileMDX(context, document)
+    return {
+      ...document,
+      category: readCategoryFromFilePath(document._meta.filePath),
+      url: normalizePathTitle(document.title),
+      description: normalizeOptionalText(document.description),
+      coverImage: normalizeOptionalText(document.coverImage),
+      layout: normalizeOptionalText(document.layout),
+      pubDate: document.pubDate.trim().slice(0, 10),
+      mdx,
+    }
+  },
+})
+
+const blogCategoryConfigs = defineCollection({
+  name: 'blogCategoryConfigs',
+  directory: 'content/blog',
+  parser: 'yaml',
+  include: '**/config.yaml',
+  schema: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    layout: z.string().optional(),
+    postLayout: z.string().optional(),
+    pageSize: z.coerce.number().int().positive().optional(),
+  }),
+  transform: (document) => ({
+    ...document,
+    category: readCategoryFromFilePath(document._meta.filePath),
+    title: normalizeOptionalText(document.title),
+    description: normalizeOptionalText(document.description),
+    layout: normalizeOptionalText(document.layout),
+    postLayout: normalizeOptionalText(document.postLayout),
+  }),
+})
+
 const digestDays = defineCollection({
   name: 'digestDays',
   directory: 'content/digest',
@@ -93,5 +153,5 @@ const digestDays = defineCollection({
 })
 
 export default defineConfig({
-  content: [digest, digestDays],
+  content: [digest, digestDays, blog, blogCategoryConfigs],
 })

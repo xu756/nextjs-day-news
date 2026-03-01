@@ -57,6 +57,10 @@ export default function Footer() {
           存档
         </Link>
         <span>·</span>
+        <Link href="/blog" className="transition hover:text-slate-800">
+          博客
+        </Link>
+        <span>·</span>
         <span>公众号</span>
         <span>·</span>
         <Link href="/digest" className="transition hover:text-slate-800">
