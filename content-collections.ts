@@ -1,4 +1,8 @@
-import { defineCollection, defineConfig } from '@content-collections/core'
+import {
+  defineCollection,
+  defineConfig,
+  defineSingleton,
+} from '@content-collections/core'
 import { compileMDX } from '@content-collections/mdx'
 import { z } from 'zod'
 
@@ -20,10 +24,7 @@ function normalizePathTitle(value: string): string {
   return value.trim().replaceAll('/', '-')
 }
 
-function readCategoryFromFilePath(filePath: string): string {
-  const [category] = filePath.split('/')
-  return category?.trim() || 'general'
-}
+const dayLikeSchema = z.union([z.string().trim().min(10), z.date()])
 
 const digestSourceItemSchema = z.object({
   title: z.string().trim().min(1),
@@ -80,17 +81,24 @@ const digest = defineCollection({
   },
 })
 
-const blog = defineCollection({
-  name: 'blog',
-  directory: 'content/blog',
+const blogPosts = defineCollection({
+  name: 'blogPosts',
+  directory: 'content/_post',
   include: '**/*.mdx',
   schema: z.object({
     title: z.string().trim().min(1),
+    slug: z.string().trim().min(1).optional(),
     description: z.string().optional(),
-    pubDate: z.string().trim().min(10),
-    tags: z.array(z.string().trim().min(1)).min(1),
+    excerpt: z.string().optional(),
+    category: z.string().trim().min(1).optional(),
+    tags: z.array(z.string().trim().min(1)).optional(),
+    featured: z.boolean().optional(),
+    createdAt: dayLikeSchema.optional(),
+    updatedAt: dayLikeSchema.optional(),
+    pubDate: dayLikeSchema.optional(),
     coverImage: z.string().optional(),
     layout: z.string().trim().min(1).optional(),
+    author: z.string().optional(),
     draft: z.boolean().optional(),
     content: z.string(),
   }),
@@ -98,43 +106,128 @@ const blog = defineCollection({
     const mdx = await compileMDX(context, document)
     return {
       ...document,
-      category: readCategoryFromFilePath(document._meta.filePath),
-      url: normalizePathTitle(document.title),
+      slug: normalizeOptionalText(document.slug),
+      url: normalizePathTitle(document.slug ?? document.title),
       description: normalizeOptionalText(document.description),
+      excerpt: normalizeOptionalText(document.excerpt),
+      category: normalizeOptionalText(document.category),
+      tags: document.tags?.map((tag) => tag.trim()).filter(Boolean),
+      createdAt:
+        document.createdAt === undefined
+          ? undefined
+          : normalizeIsoDay(document.createdAt),
+      updatedAt:
+        document.updatedAt === undefined
+          ? undefined
+          : normalizeIsoDay(document.updatedAt),
+      pubDate:
+        document.pubDate === undefined
+          ? undefined
+          : normalizeIsoDay(document.pubDate),
       coverImage: normalizeOptionalText(document.coverImage),
       layout: normalizeOptionalText(document.layout),
-      pubDate: document.pubDate.trim().slice(0, 10),
+      author: normalizeOptionalText(document.author),
       mdx,
     }
   },
 })
 
-const blogCategoryConfigs = defineCollection({
-  name: 'blogCategoryConfigs',
-  directory: 'content/blog',
+const blogConfig = defineSingleton({
+  name: 'blogConfig',
+  filePath: 'content/_post/config.yaml',
   parser: 'yaml',
-  include: '**/config.yaml',
+  optional: true,
   schema: z.object({
-    title: z.string().optional(),
-    description: z.string().optional(),
-    layout: z.string().optional(),
-    postLayout: z.string().optional(),
-    pageSize: z.coerce.number().int().positive().optional(),
+    defaults: z
+      .object({
+        category: z.string().trim().min(1).optional(),
+        tags: z.array(z.string().trim().min(1)).optional(),
+        featured: z.boolean().optional(),
+        createdAt: dayLikeSchema.optional(),
+        updatedAt: dayLikeSchema.optional(),
+        coverImage: z.string().optional(),
+        layout: z.string().trim().min(1).optional(),
+        author: z.string().trim().min(1).optional(),
+        categoryLayout: z.string().trim().min(1).optional(),
+        categoryPostLayout: z.string().trim().min(1).optional(),
+        categoryPageSize: z.coerce.number().int().positive().optional(),
+      })
+      .optional(),
+    categories: z
+      .record(
+        z.string().trim().min(1),
+        z.object({
+          title: z.string().optional(),
+          description: z.string().optional(),
+          layout: z.string().optional(),
+          postLayout: z.string().optional(),
+          pageSize: z.coerce.number().int().positive().optional(),
+        }),
+      )
+      .optional(),
   }),
-  transform: (document) => ({
-    ...document,
-    category: readCategoryFromFilePath(document._meta.filePath),
-    title: normalizeOptionalText(document.title),
-    description: normalizeOptionalText(document.description),
-    layout: normalizeOptionalText(document.layout),
-    postLayout: normalizeOptionalText(document.postLayout),
-  }),
+  transform: (document) => {
+    const defaults = document.defaults
+      ? {
+          ...document.defaults,
+          category: normalizeOptionalText(document.defaults.category),
+          tags: document.defaults.tags
+            ?.map((tag) => tag.trim())
+            .filter(Boolean),
+          createdAt:
+            document.defaults.createdAt === undefined
+              ? undefined
+              : normalizeIsoDay(document.defaults.createdAt),
+          updatedAt:
+            document.defaults.updatedAt === undefined
+              ? undefined
+              : normalizeIsoDay(document.defaults.updatedAt),
+          coverImage: normalizeOptionalText(document.defaults.coverImage),
+          layout: normalizeOptionalText(document.defaults.layout),
+          author: normalizeOptionalText(document.defaults.author),
+          categoryLayout: normalizeOptionalText(document.defaults.categoryLayout),
+          categoryPostLayout: normalizeOptionalText(
+            document.defaults.categoryPostLayout,
+          ),
+        }
+      : undefined
+
+    const categories: Record<
+      string,
+      {
+        title?: string
+        description?: string
+        layout?: string
+        postLayout?: string
+        pageSize?: number
+      }
+    > = {}
+
+    for (const [rawKey, value] of Object.entries(document.categories ?? {})) {
+      const key = rawKey.trim()
+      if (!key) continue
+
+      categories[key] = {
+        ...value,
+        title: normalizeOptionalText(value.title),
+        description: normalizeOptionalText(value.description),
+        layout: normalizeOptionalText(value.layout),
+        postLayout: normalizeOptionalText(value.postLayout),
+      }
+    }
+
+    return {
+      ...document,
+      defaults,
+      categories,
+    }
+  },
 })
 
 const digestDays = defineCollection({
   name: 'digestDays',
-  directory: 'content/digest',
   parser: 'yaml',
+  directory: 'content/digest',
   include: '**/data.yaml',
   schema: z.object({
     date: z.union([z.string().trim().min(10), z.date()]),
@@ -153,5 +246,5 @@ const digestDays = defineCollection({
 })
 
 export default defineConfig({
-  content: [digest, digestDays, blog, blogCategoryConfigs],
+  content: [digest, digestDays, blogPosts, blogConfig],
 })

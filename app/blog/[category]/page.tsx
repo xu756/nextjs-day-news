@@ -64,7 +64,8 @@ export async function generateMetadata({
   const post = findBlogPostBySlug(slug)
   if (post) {
     const canonical = `${SITE_URL}/blog/${encodeURIComponent(post.url)}`
-    const description = post.description ?? `${post.title} - ${post.category}`
+    const description =
+      post.description ?? post.excerpt ?? `${post.title} - ${post.category}`
 
     return {
       title: `${post.title} | ${SITE_TITLE}`,
@@ -159,6 +160,10 @@ export default async function BlogSlugPage({ params }: PageProps) {
 
         <p className="mt-3 text-sm text-slate-500 sm:text-base">
           {formatZhDateLabel(post.day)}
+          {post.updatedAt !== post.createdAt ? (
+            <span className="ml-3">更新于 {formatZhDateLabel(post.updatedAt)}</span>
+          ) : null}
+          {post.author ? <span className="ml-3">作者 {post.author}</span> : null}
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">

@@ -1,35 +1,70 @@
 import 'server-only'
 
-import { allBlogCategoryConfigs, allBlogs } from 'content-collections'
+import { allBlogPosts, blogConfig } from 'content-collections'
 
 export const BLOG_CATEGORY_PAGE_SIZE = 10
 export const BLOG_TAG_PAGE_SIZE = 10
 const RESERVED_ROOT_SLUGS = new Set(['about', 'blog', 'digest'])
 
-type RawBlogPost = (typeof allBlogs)[number] & {
-  category: string
-  url: string
-  pubDate: string
-  mdx: string
+type RawBlogPost = (typeof allBlogPosts)[number] & {
   title: string
+  url: string
+  mdx: string
+  slug?: string
   description?: string
-  draft?: boolean
-  tags: string[]
+  excerpt?: string
+  category?: string
+  tags?: string[]
+  featured?: boolean
+  createdAt?: string
+  updatedAt?: string
+  pubDate?: string
   coverImage?: string
   layout?: string
+  author?: string
+  draft?: boolean
 }
 
-type RawBlogCategoryConfig = (typeof allBlogCategoryConfigs)[number] & {
+type RawBlogConfig = NonNullable<typeof blogConfig>
+type RawBlogCategoryConfig = NonNullable<RawBlogConfig['categories']>[string]
+
+type BlogDefaults = {
   category: string
-  title?: string
-  description?: string
-  layout?: string
-  postLayout?: string
-  pageSize?: number
+  tags: string[]
+  featured: boolean
+  createdAt?: string
+  updatedAt?: string
+  coverImage?: string
+  layout: string
+  author?: string
+  categoryLayout: string
+  categoryPostLayout: string
+  categoryPageSize: number
 }
 
-export type BlogPost = RawBlogPost & {
+export type BlogPost = Omit<
+  RawBlogPost,
+  | 'category'
+  | 'tags'
+  | 'featured'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'pubDate'
+  | 'coverImage'
+  | 'author'
+  | 'description'
+  | 'excerpt'
+> & {
+  category: string
+  tags: string[]
+  featured: boolean
+  createdAt: string
+  updatedAt: string
   day: string
+  coverImage?: string
+  author?: string
+  description?: string
+  excerpt?: string
 }
 
 export type BlogCategoryConfig = {
@@ -38,7 +73,7 @@ export type BlogCategoryConfig = {
   description?: string
   layout: string
   postLayout: string
-  pageSize?: number
+  pageSize: number
 }
 
 export type BlogCategoryGroup = {
@@ -73,8 +108,17 @@ export type BlogTagPage = {
   totalPosts: number
 }
 
-function dayFromIso(iso: string): string {
-  return iso.slice(0, 10)
+function normalizeOptionalText(value: string | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+function normalizeIsoDay(value: string | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  if (trimmed.length < 10) return undefined
+  return trimmed.slice(0, 10)
 }
 
 function safeDecodeURIComponent(value: string): string {
@@ -89,8 +133,29 @@ function normalizePathSegment(value: string): string {
   return value.trim().replaceAll('/', '-')
 }
 
-function isReservedRootSlug(value: string): boolean {
-  return RESERVED_ROOT_SLUGS.has(value)
+function toPositiveInt(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed <= 0) return null
+  return parsed
+}
+
+function normalizeTags(
+  value: string[] | undefined,
+  fallback: string[],
+): string[] {
+  const source = value?.length ? value : fallback
+  const seen = new Set<string>()
+  const tags: string[] = []
+
+  for (const tag of source) {
+    const normalized = tag.trim()
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    tags.push(normalized)
+  }
+
+  return tags
 }
 
 function comparePostDate(a: BlogPost, b: BlogPost): number {
@@ -105,13 +170,6 @@ function compareCategory(a: BlogCategoryGroup, b: BlogCategoryGroup): number {
   const byDate = bDay.localeCompare(aDay)
   if (byDate !== 0) return byDate
   return a.category.localeCompare(b.category, 'zh-CN')
-}
-
-function toPositiveInt(value: string): number | null {
-  if (!/^\d+$/.test(value)) return null
-  const parsed = Number(value)
-  if (!Number.isInteger(parsed) || parsed <= 0) return null
-  return parsed
 }
 
 function paginateItems<T>(
@@ -137,31 +195,74 @@ function paginateItems<T>(
   }
 }
 
-const categoryConfigLookup = (() => {
-  const map = new Map<string, BlogCategoryConfig>()
+function isReservedRootSlug(value: string): boolean {
+  return RESERVED_ROOT_SLUGS.has(value)
+}
 
-  for (const config of allBlogCategoryConfigs as RawBlogCategoryConfig[]) {
-    map.set(config.category, {
-      category: config.category,
-      title: config.title,
-      description: config.description,
-      layout: config.layout ?? 'default',
-      postLayout: config.postLayout ?? 'default',
-      pageSize: config.pageSize,
-    })
+const rawConfig = blogConfig as RawBlogConfig | undefined
+
+const blogDefaults: BlogDefaults = {
+  category: normalizeOptionalText(rawConfig?.defaults?.category) ?? 'general',
+  tags: normalizeTags(rawConfig?.defaults?.tags, []),
+  featured: rawConfig?.defaults?.featured ?? false,
+  createdAt: normalizeIsoDay(rawConfig?.defaults?.createdAt),
+  updatedAt: normalizeIsoDay(rawConfig?.defaults?.updatedAt),
+  coverImage: normalizeOptionalText(rawConfig?.defaults?.coverImage),
+  layout: normalizeOptionalText(rawConfig?.defaults?.layout) ?? 'default',
+  author: normalizeOptionalText(rawConfig?.defaults?.author),
+  categoryLayout:
+    normalizeOptionalText(rawConfig?.defaults?.categoryLayout) ?? 'default',
+  categoryPostLayout:
+    normalizeOptionalText(rawConfig?.defaults?.categoryPostLayout) ??
+    normalizeOptionalText(rawConfig?.defaults?.layout) ??
+    'default',
+  categoryPageSize:
+    rawConfig?.defaults?.categoryPageSize ?? BLOG_CATEGORY_PAGE_SIZE,
+}
+
+const categoryConfigLookup = (() => {
+  const map = new Map<string, RawBlogCategoryConfig>()
+
+  for (const [rawCategory, config] of Object.entries(rawConfig?.categories ?? {})) {
+    const category = rawCategory.trim()
+    if (!category) continue
+    map.set(category, config)
   }
 
   return map
 })()
 
-const blogPosts: BlogPost[] = (allBlogs as RawBlogPost[])
+const blogPosts: BlogPost[] = (allBlogPosts as RawBlogPost[])
   .filter((post) => !post.draft)
-  .map((post) => ({
-    ...post,
-    url: normalizePathSegment(post.url),
-    tags: post.tags.map((tag) => tag.trim()).filter(Boolean),
-    day: dayFromIso(post.pubDate),
-  }))
+  .map((post) => {
+    const category = normalizeOptionalText(post.category) ?? blogDefaults.category
+    const createdAt =
+      normalizeIsoDay(post.createdAt ?? post.pubDate) ??
+      blogDefaults.createdAt ??
+      '1970-01-01'
+    const updatedAt =
+      normalizeIsoDay(post.updatedAt) ?? blogDefaults.updatedAt ?? createdAt
+    const description =
+      normalizeOptionalText(post.description) ??
+      normalizeOptionalText(post.excerpt)
+    const excerpt = normalizeOptionalText(post.excerpt) ?? description
+
+    return {
+      ...post,
+      url: normalizePathSegment(post.url),
+      category,
+      tags: normalizeTags(post.tags, blogDefaults.tags),
+      featured: post.featured ?? blogDefaults.featured,
+      createdAt,
+      updatedAt,
+      day: createdAt,
+      coverImage: normalizeOptionalText(post.coverImage) ?? blogDefaults.coverImage,
+      layout: normalizeOptionalText(post.layout),
+      author: normalizeOptionalText(post.author) ?? blogDefaults.author,
+      description,
+      excerpt,
+    }
+  })
   .sort(comparePostDate)
 
 const blogPostLookup = new Map<string, BlogPost>()
@@ -183,15 +284,24 @@ const categoryGroups: BlogCategoryGroup[] = (() => {
   return Array.from(grouped.entries())
     .map(([category, posts]) => {
       const sorted = [...posts].sort(comparePostDate)
-      const fallbackConfig: BlogCategoryConfig = {
+      const categoryConfig = categoryConfigLookup.get(category)
+      const config: BlogCategoryConfig = {
         category,
-        layout: 'default',
-        postLayout: 'default',
+        title: normalizeOptionalText(categoryConfig?.title),
+        description: normalizeOptionalText(categoryConfig?.description),
+        layout:
+          normalizeOptionalText(categoryConfig?.layout) ??
+          blogDefaults.categoryLayout,
+        postLayout:
+          normalizeOptionalText(categoryConfig?.postLayout) ??
+          blogDefaults.categoryPostLayout,
+        pageSize: categoryConfig?.pageSize ?? blogDefaults.categoryPageSize,
       }
+
       return {
         category,
         posts: sorted,
-        config: categoryConfigLookup.get(category) ?? fallbackConfig,
+        config,
       }
     })
     .sort(compareCategory)
@@ -236,8 +346,7 @@ const categoryPageStaticParams = (() => {
   const params: Array<{ category: string; page: string }> = []
 
   for (const group of categoryGroups) {
-    const pageSize = group.config.pageSize ?? BLOG_CATEGORY_PAGE_SIZE
-    const totalPages = Math.max(1, Math.ceil(group.posts.length / pageSize))
+    const totalPages = Math.max(1, Math.ceil(group.posts.length / group.config.pageSize))
     for (let page = 2; page <= totalPages; page += 1) {
       params.push({
         category: group.category,
@@ -342,7 +451,7 @@ export function findBlogPostBySlug(slug: string): BlogPost | null {
 }
 
 export function findBlogCategoryBySlug(slug: string): BlogCategoryGroup | null {
-  const decoded = safeDecodeURIComponent(slug)
+  const decoded = safeDecodeURIComponent(slug).trim()
   return categoryLookup.get(decoded) ?? null
 }
 
@@ -353,8 +462,7 @@ export function getBlogCategoryPageBySlug(
   const group = findBlogCategoryBySlug(slug)
   if (!group) return null
 
-  const pageSize = group.config.pageSize ?? BLOG_CATEGORY_PAGE_SIZE
-  const paged = paginateItems(group.posts, page, pageSize)
+  const paged = paginateItems(group.posts, page, group.config.pageSize)
   if (!paged) return null
 
   return {
@@ -382,6 +490,7 @@ export function getBlogTagPageBySlug(
 ): BlogTagPage | null {
   const decoded = normalizePathSegment(safeDecodeURIComponent(tagSlug))
   if (isReservedRootSlug(decoded)) return null
+
   const group = tagLookup.get(decoded)
   if (!group) return null
 

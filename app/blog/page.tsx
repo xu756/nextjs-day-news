@@ -39,7 +39,7 @@ export default function BlogIndexPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
           暂无博客内容。请在{' '}
           <code className="rounded bg-slate-100 px-1.5 py-0.5">
-            content/blog/&lt;category&gt;/&lt;file&gt;.mdx
+            content/_post/&lt;file&gt;.mdx
           </code>{' '}
           新建文章。
         </section>
