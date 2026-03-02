@@ -1,4 +1,5 @@
 import type { DigestPost } from '@/lib/digest'
+import CodeBlockPre from '@/components/CodeBlockPre'
 import {
   findDigestDayBySlug,
   formatZhDateLabel,
@@ -192,7 +193,7 @@ export default async function DigestPostPage({ params }: PageProps) {
               </p>
 
               <div className="prose prose-slate mt-4 max-w-none prose-headings:text-primary prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80">
-                <MDXContent code={post.mdx} />
+                <MDXContent code={post.mdx} components={{ pre: CodeBlockPre }} />
               </div>
 
               {sectionSources.length > 0 ? (

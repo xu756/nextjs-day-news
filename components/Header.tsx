@@ -12,7 +12,7 @@ export default function Header() {
   const [showQr, setShowQr] = useState(false)
 
   return (
-    <header className="sticky top-4 z-50 mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-8">
+    <header className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-8">
       <Card className="relative border border-border/80 bg-card/90 px-4 py-3 shadow-lg shadow-primary/8 backdrop-blur sm:px-5">
         <nav className="flex flex-wrap items-center justify-between gap-3">
           <Link

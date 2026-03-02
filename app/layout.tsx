@@ -44,10 +44,10 @@ export default function RootLayout({
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--border)_45%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--border)_35%,transparent)_1px,transparent_1px)] bg-[size:36px_36px] opacity-[0.16]"
           />
-          <div className="relative">
-          <Header />
-          {children}
-          <Footer />
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <Footer />
           </div>
         </div>
       </body>

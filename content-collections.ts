@@ -4,6 +4,8 @@ import {
   defineSingleton,
 } from '@content-collections/core'
 import { compileMDX } from '@content-collections/mdx'
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
 import { z } from 'zod'
 
 function normalizeIsoDay(value: string | Date): string {
@@ -25,6 +27,10 @@ function normalizePathTitle(value: string): string {
 }
 
 const dayLikeSchema = z.union([z.string().trim().min(10), z.date()])
+const mdxOptions = {
+  remarkPlugins: [remarkMath],
+  rehypePlugins: [rehypeKatex],
+}
 
 const digestSourceItemSchema = z.object({
   title: z.string().trim().min(1),
@@ -73,7 +79,7 @@ const digest = defineCollection({
     slug: z.string().optional(),
   }),
   transform: async (document, context) => {
-    const mdx = await compileMDX(context, document)
+    const mdx = await compileMDX(context, document, mdxOptions)
     return {
       ...document,
       mdx,
@@ -103,7 +109,8 @@ const blogPosts = defineCollection({
     content: z.string(),
   }),
   transform: async (document, context) => {
-    const mdx = await compileMDX(context, document)
+    const mdx = await compileMDX(context, document, mdxOptions)
+
     return {
       ...document,
       slug: normalizeOptionalText(document.slug),
@@ -185,7 +192,9 @@ const blogConfig = defineSingleton({
           coverImage: normalizeOptionalText(document.defaults.coverImage),
           layout: normalizeOptionalText(document.defaults.layout),
           author: normalizeOptionalText(document.defaults.author),
-          categoryLayout: normalizeOptionalText(document.defaults.categoryLayout),
+          categoryLayout: normalizeOptionalText(
+            document.defaults.categoryLayout,
+          ),
           categoryPostLayout: normalizeOptionalText(
             document.defaults.categoryPostLayout,
           ),

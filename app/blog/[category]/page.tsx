@@ -1,4 +1,3 @@
-import CategoryPostList from './CategoryPostList'
 import {
   findBlogCategoryBySlug,
   findBlogPostBySlug,
@@ -9,10 +8,13 @@ import {
   toBlogTagSlug,
 } from '@/lib/blog'
 import { SITE_TITLE, SITE_URL } from '@/lib/site'
+import CodeBlockPre from '@/components/CodeBlockPre'
+import { Badge } from '@/components/ui/badge'
 import { MDXContent } from '@content-collections/mdx/react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import CategoryPostList from './CategoryPostList'
 
 type PageProps = {
   params: Promise<{
@@ -133,7 +135,8 @@ export default async function BlogSlugPage({ params }: PageProps) {
   }
 
   const categoryGroup = findBlogCategoryBySlug(post.category)
-  const postLayout = post.layout ?? categoryGroup?.config.postLayout ?? 'default'
+  const postLayout =
+    post.layout ?? categoryGroup?.config.postLayout ?? 'default'
   const related = getBlogPosts()
     .filter((item) => item.category === post.category && item.url !== post.url)
     .slice(0, 3)
@@ -161,27 +164,32 @@ export default async function BlogSlugPage({ params }: PageProps) {
         <p className="mt-3 text-sm text-muted-foreground sm:text-base">
           {formatZhDateLabel(post.day)}
           {post.updatedAt !== post.createdAt ? (
-            <span className="ml-3">更新于 {formatZhDateLabel(post.updatedAt)}</span>
+            <span className="ml-3">
+              更新于 {formatZhDateLabel(post.updatedAt)}
+            </span>
           ) : null}
-          {post.author ? <span className="ml-3">作者 {post.author}</span> : null}
+          {post.author ? (
+            <span className="ml-3">作者 {post.author}</span>
+          ) : null}
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
-            <Link
-              key={tag}
-              href={`/${encodeURIComponent(toBlogTagSlug(tag))}`}
-              className="rounded-full border border-border/80 bg-card/90 px-3 py-1 text-xs text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-            >
-              #{tag}
-            </Link>
+            <Badge key={tag} variant="outline" asChild>
+              <Link
+                href={`/${encodeURIComponent(toBlogTagSlug(tag))}`}
+                className="transition hover:border-primary/40 hover:text-primary"
+              >
+                #{tag}
+              </Link>
+            </Badge>
           ))}
         </div>
       </header>
 
       <article className={postContainerClassName(postLayout)}>
         <div className="prose prose-slate max-w-none prose-headings:text-primary prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80">
-          <MDXContent code={post.mdx} />
+          <MDXContent code={post.mdx} components={{ pre: CodeBlockPre }} />
         </div>
       </article>
 
