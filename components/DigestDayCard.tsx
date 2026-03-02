@@ -1,5 +1,8 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -21,11 +24,11 @@ function SectionTitles(props: { titles: string[] }) {
         return (
           <li
             key={`${num}-${title}`}
-            className={`flex items-start gap-3 ${isLead ? 'text-slate-900' : 'text-slate-500'}`}
+            className={`flex items-start gap-3 ${isLead ? 'text-foreground' : 'text-muted-foreground'}`}
           >
             <span
-              className={`mt-0.5 w-7 shrink-0 font-mono text-sm font-semibold ${
-                isLead ? 'text-amber-700' : 'text-slate-300'
+              className={`mt-0.5 w-7 shrink-0 font-mono text-sm font-semibold tracking-wide ${
+                isLead ? 'text-primary' : 'text-muted-foreground/60'
               }`}
             >
               {num}
@@ -33,8 +36,8 @@ function SectionTitles(props: { titles: string[] }) {
             <span
               className={
                 isLead
-                  ? 'text-lg leading-8 sm:text-[1.35rem]'
-                  : 'text-base leading-7'
+                  ? 'text-lg leading-7 sm:text-[1.3rem]'
+                  : 'text-base leading-7 text-muted-foreground'
               }
             >
               {title}
@@ -54,7 +57,7 @@ export default function DigestDayCard(props: DigestDayCardProps) {
   }
 
   return (
-    <article
+    <Card
       role="link"
       tabIndex={0}
       aria-label={`${props.dayLabel} 资讯卡片`}
@@ -65,27 +68,40 @@ export default function DigestDayCard(props: DigestDayCardProps) {
           openDigest()
         }
       }}
-      className={`group relative cursor-pointer rounded-3xl border border-emerald-200/60 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:p-8 ${
-        props.featured ? 'bg-gradient-to-br from-white to-emerald-50/60' : ''
+      className={`group cursor-pointer gap-0 overflow-hidden rounded-3xl border border-border/80 bg-card/90 py-0 transition duration-200 hover:-translate-y-0.5 hover:shadow-xl ${
+        props.featured
+          ? 'bg-[linear-gradient(120deg,color-mix(in_oklab,var(--color-primary)_10%,transparent),transparent)]'
+          : ''
       }`}
     >
-      <span className="mb-5 block h-1.5 w-14 rounded-full bg-gradient-to-r from-emerald-700 to-emerald-300" />
-      <p className="mb-4 font-mono text-xs text-slate-400">{props.dayLabel}</p>
-      <SectionTitles titles={props.titles} />
+      <CardHeader className="gap-3 border-b border-border/60 px-6 pb-4 pt-5 sm:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-mono text-xs tracking-wide text-muted-foreground">
+            {props.dayLabel}
+          </p>
+          {props.featured ? <Badge>今日精选</Badge> : <Badge variant="secondary">存档</Badge>}
+        </div>
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          Daily AI Digest
+        </CardTitle>
+      </CardHeader>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-emerald-700 transition group-hover:text-emerald-800">
+      <CardContent className="px-6 pb-5 pt-4 sm:px-8">
+        <SectionTitles titles={props.titles} />
+      </CardContent>
+
+      <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-6 pb-5 pt-4 sm:px-8">
+        <Button variant="link" className="h-auto px-0 text-sm font-semibold">
           阅读全文 →
-        </span>
-
+        </Button>
         <Link
           href={`/digest/${encodeURIComponent(props.slug)}/sources`}
           onClick={(event) => event.stopPropagation()}
-          className="font-mono text-xs text-slate-400 transition hover:text-slate-700"
+          className="font-mono text-xs text-muted-foreground transition hover:text-foreground"
         >
           从 {props.candidateCount} 条资讯中筛选
         </Link>
-      </div>
-    </article>
+      </CardFooter>
+    </Card>
   )
 }

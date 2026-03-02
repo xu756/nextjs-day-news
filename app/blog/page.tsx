@@ -4,7 +4,10 @@ import {
 } from '@/lib/blog'
 import { SITE_TITLE, SITE_URL } from '@/lib/site'
 import type { Metadata } from 'next'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 
 const canonical = `${SITE_URL}/blog`
 
@@ -27,44 +30,44 @@ export default function BlogIndexPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
       <section className="py-10 text-center sm:py-14">
-        <h1 className="font-serif text-4xl font-bold text-slate-900 sm:text-5xl">
-          博客
-        </h1>
-        <p className="mt-3 text-sm text-slate-500 sm:text-base">
-          只显示前 10 个类目
-        </p>
+        <Badge variant="secondary" className="mb-4">
+          Knowledge Base
+        </Badge>
+        <h1 className="text-4xl font-semibold text-foreground sm:text-5xl">博客</h1>
+        <p className="mt-3 text-sm text-muted-foreground sm:text-base">只显示前 10 个类目</p>
       </section>
 
       {categories.length === 0 ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-          暂无博客内容。请在{' '}
-          <code className="rounded bg-slate-100 px-1.5 py-0.5">
-            content/_post/&lt;file&gt;.mdx
-          </code>{' '}
-          新建文章。
-        </section>
+        <Card className="rounded-2xl border-border/80 bg-card/90">
+          <CardContent className="p-6 text-muted-foreground">
+            暂无博客内容。请在{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">
+              content/_post/&lt;file&gt;.mdx
+            </code>{' '}
+            新建文章。
+          </CardContent>
+        </Card>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {categories.map((item) => (
             <li key={item.category}>
-              <article className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                <p className="font-mono text-xs text-slate-400">
+              <article className="h-full rounded-3xl border border-border/80 bg-card/90 p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-6">
+                <Badge variant="outline" className="font-mono">
                   {item.totalPosts} 篇
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                </Badge>
+                <h2 className="mt-2 text-2xl font-semibold text-foreground">
                   <Link
                     href={`/blog/${encodeURIComponent(item.category)}`}
-                    className="transition hover:text-emerald-700"
+                    className="inline-flex items-center gap-1.5 transition hover:text-primary"
                   >
                     {item.title}
+                    <ArrowRight className="size-4" />
                   </Link>
                 </h2>
-                <p className="mt-3 text-sm text-slate-600">
+                <p className="mt-3 text-sm text-muted-foreground">
                   最近更新：{formatZhDateLabel(item.latestPost.day)}
                 </p>
-                <p className="mt-1 text-sm text-slate-700">
-                  {item.latestPost.title}
-                </p>
+                <p className="mt-1 text-sm text-foreground/90">{item.latestPost.title}</p>
               </article>
             </li>
           ))}

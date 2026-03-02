@@ -8,6 +8,7 @@ description: Use when starting work in the nextjs-day-news repository and needin
 ## Overview
 
 这个项目是一个基于 Next.js App Router 的内容站，核心有两块：
+本项目部署在 Vercel，项目地址：https://ai.xu756.top/
 
 - `digest`：每日 AI 资讯速览（按日期归档）
 - `blog`：专题博客（文章参数驱动，分类和标签聚合）
@@ -18,10 +19,10 @@ description: Use when starting work in the nextjs-day-news repository and needin
 
 - 框架与运行时：Next.js 16 + React 19 + TypeScript
 - 内容系统：`@content-collections/core` + `@content-collections/mdx`
-- 内容定义入口：[content-collections.ts](../../content-collections.ts)
+- 内容定义入口：[content-collections.ts](../../../content-collections.ts)
 - 业务数据聚合：
-  - [lib/digest.ts](../../lib/digest.ts)
-  - [lib/blog.ts](../../lib/blog.ts)
+  - [lib/digest.ts](../../../lib/digest.ts)
+  - [lib/blog.ts](../../../lib/blog.ts)
 - 路由入口：
   - `app/digest/*`
   - `app/blog/*`
@@ -85,8 +86,10 @@ bun run lint && bun run build
 
 ## First Files To Read
 
-1. [content-collections.ts](../../content-collections.ts)
-2. [lib/blog.ts](../../lib/blog.ts)
-3. [lib/digest.ts](../../lib/digest.ts)
-4. [app/blog/[category]/page.tsx](../../app/blog/[category]/page.tsx)
-5. [app/digest/[slug]/page.tsx](../../app/digest/[slug]/page.tsx)
+1. [content-collections.ts](../../../content-collections.ts)
+2. [lib/blog.ts](../../../lib/blog.ts)
+3. [lib/digest.ts](../../../lib/digest.ts)
+4. [app/blog/[category]/page.tsx](../../../app/blog/[category]/page.tsx)
+5. [app/digest/[slug]/page.tsx](../../../app/digest/[slug]/page.tsx)
+
+如果新增功能 请修改本文档的 Overview 和 Quick Map 部分，保持内容与代码同步。

@@ -8,6 +8,7 @@ import { SITE_TITLE, SITE_URL } from '@/lib/site'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -50,25 +51,22 @@ function SourceSection(props: {
     score?: number
     mentions: number
   }>
-  delayBase?: number
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200/70 bg-white/90 p-4 shadow-sm backdrop-blur sm:p-6">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
-        {props.title}
-      </h2>
+    <section className="rounded-3xl border border-border/80 bg-card/90 p-4 shadow-sm backdrop-blur sm:p-6">
+      <Badge className="mb-4">{props.title}</Badge>
 
       <div className="space-y-3">
         {props.items.map((item) => (
           <article
             key={item.url}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md"
+            className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
           >
             <a
               href={item.url}
               target="_blank"
               rel="noreferrer noopener"
-              className="text-base font-medium leading-7 text-slate-900 transition hover:text-emerald-700"
+              className="text-base font-medium leading-7 text-foreground transition hover:text-primary"
             >
               {item.title}
             </a>
@@ -77,7 +75,7 @@ function SourceSection(props: {
               {item.sourceNames.map((name) => (
                 <span
                   key={`${item.url}-${name}`}
-                  className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-500"
+                  className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
                 >
                   {name}
                 </span>
@@ -86,18 +84,18 @@ function SourceSection(props: {
               {item.sourceTypes.map((type) => (
                 <span
                   key={`${item.url}-${type}`}
-                  className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-500"
+                  className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground"
                 >
                   {type}
                 </span>
               ))}
 
-              <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-500">
+              <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
                 {item.mentions}
               </span>
 
               {typeof item.score === 'number' ? (
-                <span className="ml-auto rounded-md bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-700">
+                <span className="ml-auto rounded-md bg-primary/12 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary">
                   {item.score.toFixed(2)}
                 </span>
               ) : null}
@@ -124,23 +122,23 @@ export default async function DigestSourcesPage({ params }: PageProps) {
       <section className="py-8 text-center sm:py-12">
         <Link
           href={`/digest/${encodeURIComponent(digestDay.day)}`}
-          className="text-sm text-slate-500 transition hover:text-slate-800"
+          className="text-sm text-muted-foreground transition hover:text-foreground"
         >
           ← 返回文章
         </Link>
 
-        <h1 className="mt-3 font-serif text-3xl font-bold text-slate-900 sm:text-4xl">
+        <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-4xl">
           {formatZhDateLabel(digestDay.day)}信息源
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           从 {sources.candidateCount} 条资讯中选出 {sources.featured.length}{' '}
           条重点报道
         </p>
       </section>
 
-      <SourceSection title="重点关注" items={sources.featured} delayBase={80} />
-      <SourceSection title="候选资讯" items={sources.all} delayBase={140} />
+      <SourceSection title="重点关注" items={sources.featured} />
+      <SourceSection title="候选资讯" items={sources.all} />
     </main>
   )
 }

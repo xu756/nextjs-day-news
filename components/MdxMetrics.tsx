@@ -8,12 +8,12 @@ export function MdxMetrics({
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+          className="rounded-2xl border border-border/80 bg-muted/45 px-4 py-3"
         >
-          <p className="m-0 text-xs uppercase tracking-[0.12em] text-slate-500">
+          <p className="m-0 text-xs uppercase tracking-[0.12em] text-muted-foreground">
             {item.label}
           </p>
-          <p className="m-0 mt-1 text-lg font-semibold text-slate-800">
+          <p className="m-0 mt-1 text-lg font-semibold text-foreground">
             {item.value}
           </p>
         </div>

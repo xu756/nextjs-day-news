@@ -12,6 +12,8 @@ import { MDXContent } from '@content-collections/mdx/react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 const DEFAULT_OG_IMAGE = '/images/lagoon-1.svg'
 
@@ -113,36 +115,36 @@ export default async function DigestPostPage({ params }: PageProps) {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
       <header className="py-8 text-center sm:py-10">
-        <p className="inline-flex flex-wrap items-center justify-center gap-2 font-mono text-xs text-slate-500">
+        <p className="inline-flex flex-wrap items-center justify-center gap-2 font-mono text-xs text-muted-foreground">
           <time>{formatZhDateLabel(digestDay.day)}</time>
-          <span className="text-slate-300">|</span>
+          <span className="text-muted-foreground/40">|</span>
           <Link
             href={`/digest/${encodeURIComponent(digestDay.day)}/sources`}
-            className="transition hover:text-slate-800"
+            className="transition hover:text-foreground"
           >
             从 {sourceSummary.candidateCount} 条资讯中筛选
           </Link>
         </p>
 
-        <h1 className="mx-auto mt-3 max-w-4xl text-balance font-serif text-3xl font-bold leading-tight text-slate-900 sm:text-5xl">
+        <h1 className="mx-auto mt-3 max-w-4xl text-balance text-3xl font-semibold leading-tight text-foreground sm:text-5xl">
           {digestDay.posts.slice(0, 2).map((post, index) => (
             <span key={index}>{post.title}</span>
           ))}
         </h1>
 
-        <ol className="mx-auto mt-4 max-w-3xl text-left text-sm leading-7 text-slate-500 sm:text-base">
+        <ol className="mx-auto mt-4 max-w-3xl text-left text-sm leading-7 text-muted-foreground sm:text-base">
           {digestDay.posts.slice(0, 3).map((post, index) => (
             <li key={post.slug + post.title} className="inline">
-              {index > 0 ? <span className="text-slate-300"> ｜ </span> : null}
+              {index > 0 ? <span className="text-muted-foreground/40"> ｜ </span> : null}
               {post.title}
             </li>
           ))}
         </ol>
 
-        <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-700 to-emerald-300" />
+        <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-gradient-to-r from-primary to-chart-2" />
       </header>
 
-      <section className="mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <section className="mb-6 overflow-hidden rounded-3xl border border-border/80 bg-card/90 shadow-sm">
         {dayConfig?.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -154,12 +156,12 @@ export default async function DigestPostPage({ params }: PageProps) {
             loading="lazy"
           />
         ) : (
-          <div className="flex aspect-[16/7] items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50/70">
+          <div className="flex aspect-[16/7] items-center justify-center bg-gradient-to-br from-muted to-accent/70">
             <div className="text-center">
-              <p className="font-mono text-xs uppercase tracking-[0.16em] text-slate-400">
+              <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 Cover Slot
               </p>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-muted-foreground">
                 在 data.yaml 设置 coverImage 后会显示当天封面
               </p>
             </div>
@@ -173,31 +175,31 @@ export default async function DigestPostPage({ params }: PageProps) {
           return (
             <article
               key={post.slug + post.title}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+              className="rounded-3xl border border-border/80 bg-card/90 p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-xl sm:p-7"
             >
-              <h2 className="flex items-start gap-3 text-xl font-bold text-slate-900 sm:text-2xl">
-                <span className="mt-0.5 w-10 shrink-0 font-mono text-2xl text-amber-700 sm:text-3xl">
+              <h2 className="flex items-start gap-3 text-xl font-semibold text-foreground sm:text-2xl">
+                <span className="mt-0.5 w-10 shrink-0 font-mono text-2xl text-primary sm:text-3xl">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <span>{post.title}</span>
               </h2>
 
-              <p className="mt-4 text-sm leading-7 text-slate-700 sm:text-base">
-                <strong className="mr-1 text-slate-900">
+              <p className="mt-4 text-sm leading-7 text-foreground/90 sm:text-base">
+                <strong className="mr-1 text-foreground">
                   为什么值得关注：
                 </strong>
                 {post.why ?? '该条目由来源权重、时效性与多源交叉评分综合入选。'}
               </p>
 
-              <div className="prose prose-slate mt-4 max-w-none prose-headings:text-emerald-800 prose-a:text-blue-700 prose-a:no-underline hover:prose-a:text-blue-800">
+              <div className="prose prose-slate mt-4 max-w-none prose-headings:text-primary prose-a:text-primary prose-a:no-underline hover:prose-a:text-primary/80">
                 <MDXContent code={post.mdx} />
               </div>
 
               {sectionSources.length > 0 ? (
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="mb-2 text-lg font-semibold text-slate-400">
+                <div className="mt-4 rounded-2xl border border-border/80 bg-muted/40 p-4">
+                  <Badge variant="secondary" className="mb-2">
                     来源
-                  </p>
+                  </Badge>
                   <div className="space-y-1.5">
                     {sectionSources.map((source) => (
                       <a
@@ -205,10 +207,10 @@ export default async function DigestPostPage({ params }: PageProps) {
                         href={source.url}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="flex flex-wrap items-center gap-2 text-sm text-slate-600 transition hover:text-slate-900"
+                        className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
                       >
                         <span>{source.title}</span>
-                        <span className="rounded-md bg-slate-200 px-2 py-0.5 font-mono text-[11px] text-slate-500">
+                        <span className="rounded-md bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
                           {source.domain}
                         </span>
                       </a>
@@ -221,36 +223,36 @@ export default async function DigestPostPage({ params }: PageProps) {
         })}
 
         {featuredRemaining.length > 0 ? (
-          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <section className="rounded-3xl border border-border/80 bg-card/90 p-4 shadow-sm sm:p-6">
             {featuredRemaining.map((item, idx) => (
               <article
                 key={item.url}
-                className="flex gap-3 border-t border-slate-100 py-3 first:border-t-0"
+                className="flex gap-3 border-t border-border/60 py-3 first:border-t-0"
               >
-                <span className="w-8 shrink-0 font-mono text-2xl text-slate-300">
+                <span className="w-8 shrink-0 font-mono text-2xl text-muted-foreground/50">
                   {String(idx + 4).padStart(2, '0')}
                 </span>
 
                 <div className="min-w-0">
-                  <p className="text-base font-semibold leading-7 text-slate-900">
+                  <p className="text-base font-semibold leading-7 text-foreground">
                     <a
                       href={item.url}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="transition hover:text-emerald-700"
+                      className="transition hover:text-primary"
                     >
                       {item.title}
                     </a>
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {item.sourceNames.join(' / ')}
                     {' · '}
                     <a
                       href={item.url}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="rounded bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-500 transition hover:text-slate-700"
+                      className="rounded bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition hover:text-foreground"
                     >
                       {domainFromUrl(item.url)}
                     </a>
@@ -263,23 +265,19 @@ export default async function DigestPostPage({ params }: PageProps) {
       </main>
 
       <section
-        className="mt-8 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-5"
+        className="mt-8 flex flex-wrap items-center gap-2 border-t border-border/80 pt-5"
         aria-label="分享"
       >
-        <span className="mr-1 text-xs text-slate-400">分享</span>
+        <span className="mr-1 text-xs text-muted-foreground">分享</span>
         {['微信', '微博', 'X', '复制链接'].map((label) => (
-          <button
-            key={label}
-            type="button"
-            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
-          >
+          <Button key={label} type="button" variant="outline" size="xs">
             {label}
-          </button>
+          </Button>
         ))}
       </section>
 
       <nav className="mt-8" aria-label="继续阅读">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           继续阅读
         </h2>
 
@@ -288,20 +286,20 @@ export default async function DigestPostPage({ params }: PageProps) {
             <Link
               key={day.day}
               href={`/digest/${encodeURIComponent(day.day)}`}
-              className="flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/40"
+              className="flex flex-col gap-1 rounded-2xl border border-border/80 bg-card/90 px-4 py-3 shadow-sm transition hover:border-primary/30 hover:bg-accent/40"
             >
-              <span className="font-mono text-xs text-slate-400">
+              <span className="font-mono text-xs text-muted-foreground">
                 {formatZhDateLabel(day.day)}
               </span>
-              <span className="text-sm text-slate-700">
+              <span className="text-sm text-foreground/90">
                 {day.posts[0]?.title}
               </span>
             </Link>
           ))}
         </div>
 
-        <p className="mt-3 text-sm text-slate-500">
-          <Link href="/digest" className="transition hover:text-slate-800">
+        <p className="mt-3 text-sm text-muted-foreground">
+          <Link href="/digest" className="transition hover:text-foreground">
             查看全部存档 →
           </Link>
         </p>

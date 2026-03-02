@@ -70,24 +70,24 @@ export default async function TagPagedPage({ params }: PageProps) {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-8 sm:px-6 lg:px-8">
       <header className="py-8 sm:py-10">
-        <p className="font-mono text-xs text-slate-500">
-          <Link href="/blog" className="transition hover:text-slate-800">
+        <p className="font-mono text-xs text-muted-foreground">
+          <Link href="/blog" className="transition hover:text-foreground">
             博客
           </Link>
-          <span className="mx-2 text-slate-300">/</span>
+          <span className="mx-2 text-muted-foreground/40">/</span>
           <Link
             href={`/${encodeURIComponent(pageData.slug)}`}
-            className="transition hover:text-slate-800"
+            className="transition hover:text-foreground"
           >
             #{pageData.tag}
           </Link>
-          <span className="mx-2 text-slate-300">/</span>
+          <span className="mx-2 text-muted-foreground/40">/</span>
           <span>第 {pageData.page} 页</span>
         </p>
-        <h1 className="mt-3 font-serif text-3xl font-bold text-slate-900 sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-semibold text-foreground sm:text-5xl">
           #{pageData.tag}
         </h1>
-        <p className="mt-3 text-sm text-slate-500 sm:text-base">
+        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
           共 {pageData.totalPosts} 篇文章，第 {pageData.page} / {pageData.totalPages}{' '}
           页
         </p>
@@ -96,20 +96,20 @@ export default async function TagPagedPage({ params }: PageProps) {
       <ul className="space-y-4">
         {pageData.posts.map((post) => (
           <li key={`${post.category}-${post.url}`}>
-            <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <p className="font-mono text-xs text-slate-400">
+            <article className="rounded-2xl border border-border/80 bg-card/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5">
+              <p className="font-mono text-xs text-muted-foreground">
                 {formatZhDateLabel(post.day)}
               </p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-900">
+              <h2 className="mt-1 text-xl font-semibold text-foreground">
                 <Link
                   href={`/blog/${encodeURIComponent(post.url)}`}
-                  className="transition hover:text-emerald-700"
+                  className="transition hover:text-primary"
                 >
                   {post.title}
                 </Link>
               </h2>
               {post.description ? (
-                <p className="mt-2 text-sm text-slate-600">{post.description}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{post.description}</p>
               ) : null}
             </article>
           </li>
@@ -117,21 +117,21 @@ export default async function TagPagedPage({ params }: PageProps) {
       </ul>
 
       <nav
-        className="mt-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm"
+        className="mt-6 flex items-center justify-between rounded-2xl border border-border/80 bg-card/90 px-4 py-3 text-sm shadow-sm"
         aria-label="标签分页"
       >
-        <Link href={prevHref} className="transition hover:text-slate-900">
+        <Link href={prevHref} className="transition hover:text-foreground">
           ← 上一页
         </Link>
-        <span className="font-mono text-xs text-slate-500">
+        <span className="font-mono text-xs text-muted-foreground">
           第 {pageData.page} / {pageData.totalPages} 页
         </span>
         {nextHref ? (
-          <Link href={nextHref} className="transition hover:text-slate-900">
+          <Link href={nextHref} className="transition hover:text-foreground">
             下一页 →
           </Link>
         ) : (
-          <span className="text-slate-300">下一页 →</span>
+          <span className="text-muted-foreground/40">下一页 →</span>
         )}
       </nav>
     </main>
